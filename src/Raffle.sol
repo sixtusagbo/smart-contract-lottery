@@ -33,16 +33,21 @@ contract Raffle {
     error Raffle__SendMoreToEnterRaffle();
 
     uint256 private immutable i_entranceFee;
+    // @dev The duration of the lottery in seconds
+    uint256 private immutable i_interval;
     address payable[] private s_players;
+    uint256 private s_lastTimeStamp;
 
     /* Events */
     event RaffleEntered(address indexed player);
 
-    constructor(uint256 entranceFee) {
+    constructor(uint256 entranceFee, uint256 interval) {
         i_entranceFee = entranceFee;
+        i_interval = interval;
+        s_lastTimeStamp = block.timestamp;
     }
 
-    function enterRaffle() public payable {
+    function enterRaffle() external payable {
         // require(msg.value >= i_entranceFee, "Not enough ETH sent!"); //! Not very gas efficient because we're storing a giant string
         // require(msg.v alue >= i_entranceFee, SendMoreToEnterRaffle()); //! Still not really gas efficient and it requires specific version of Solidity and specific compiler version
         if (msg.value < i_entranceFee) {
@@ -50,10 +55,18 @@ contract Raffle {
             revert Raffle__SendMoreToEnterRaffle();
         }
         s_players.push(payable(msg.sender));
-        emit  RaffleEntered(msg.sender);
+        emit RaffleEntered(msg.sender);
     }
 
-    function pickWinner() public {}
+    // 1. Get random number
+    // 2. Use random number to pick a player
+    // 3. Has to be called automatically
+    function pickWinner() external {
+        // Check if enough time has passed
+        if ((block.timestamp - s_lastTimeStamp) < i_interval) {
+            revert();
+        }
+    }
 
     // Getter functions
     function getEntranceFee() external view returns (uint256) {
