@@ -33,6 +33,10 @@ contract Raffle {
     error Raffle__SendMoreToEnterRaffle();
 
     uint256 private immutable i_entranceFee;
+    address payable[] private s_players;
+
+    /* Events */
+    event RaffleEntered(address indexed player);
 
     constructor(uint256 entranceFee) {
         i_entranceFee = entranceFee;
@@ -40,11 +44,13 @@ contract Raffle {
 
     function enterRaffle() public payable {
         // require(msg.value >= i_entranceFee, "Not enough ETH sent!"); //! Not very gas efficient because we're storing a giant string
-        // require(msg.value >= i_entranceFee, SendMoreToEnterRaffle()); //! Still not really gas efficient and it requires specific version of Solidity and specific compiler version
+        // require(msg.v alue >= i_entranceFee, SendMoreToEnterRaffle()); //! Still not really gas efficient and it requires specific version of Solidity and specific compiler version
         if (msg.value < i_entranceFee) {
             //? Most gas efficient way to handle this
             revert Raffle__SendMoreToEnterRaffle();
         }
+        s_players.push(payable(msg.sender));
+        emit  RaffleEntered(msg.sender);
     }
 
     function pickWinner() public {}
