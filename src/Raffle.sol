@@ -36,6 +36,11 @@ contract Raffle is VRFConsumerBaseV2Plus {
     error Raffle__SendMoreToEnterRaffle();
     error Raffle__TransferFailed();
     error Raffle__RaffleNotOpen();
+    error Raffle__UpkeepNotNeeded(
+        uint256 balance,
+        uint256 playersLength,
+        uint256 raffleState
+    );
 
     /* Type declarations */
     enum RaffleState {
@@ -112,6 +117,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
         bool hasETH = address(this).balance > 0;
         bool hasPlayers = s_players.length > 0;
         upkeepNeeded = timeHasPassed && isOpen && hasETH && hasPlayers;
+        return (upkeepNeeded, "");
     }
 
     // 1. Get random number
@@ -121,7 +127,11 @@ contract Raffle is VRFConsumerBaseV2Plus {
         // Check if enough time has passed
         (bool upkeepNeeded, ) = checkUpkeep("");
         if (!upkeepNeeded) {
-            revert();
+            revert Raffle__UpkeepNotNeeded(
+                address(this).balance,
+                s_players.length,
+                uint256(s_raffleState)
+            );
         }
 
         s_raffleState = RaffleState.CALCULATING;
@@ -139,13 +149,13 @@ contract Raffle is VRFConsumerBaseV2Plus {
                 )
             });
 
-        uint256 requestId = s_vrfCoordinator.requestRandomWords(request);
+        s_vrfCoordinator.requestRandomWords(request);
     }
 
     // CEI pattern - Checks, Effects, Interactions
     // This prevents reentrancy attacks
     function fulfillRandomWords(
-        uint256 requestId,
+        uint256 /*  requestId */,
         uint256[] calldata randomWords
     ) internal override {
         // Checks
