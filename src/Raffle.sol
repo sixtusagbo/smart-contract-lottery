@@ -92,19 +92,40 @@ contract Raffle is VRFConsumerBaseV2Plus {
         emit RaffleEntered(msg.sender);
     }
 
+    /**
+     * @dev This function is called by the Chainlink node to see
+     * if it's time to pick a winner.
+     * The following should be true in order for upkeepNeeded to be true:
+     * 1. The time interval has passed between the raffle runs
+     * 2. The raffle is in the OPEN state
+     * 3. The contract has ETH (has players)
+     * 4. Implicitly, your subscription has LINK
+     * @param - ignored
+     * @return upkeepNeeded - true if it's time to pick a winner
+     * @return - ignored
+     */
+    function checkUpkeep(
+        bytes memory /* checkData */
+    ) public view returns (bool upkeepNeeded, bytes memory /* performData */) {
+        bool timeHasPassed = (block.timestamp - s_lastTimeStamp) >= i_interval;
+        bool isOpen = s_raffleState == RaffleState.OPEN;
+        bool hasETH = address(this).balance > 0;
+        bool hasPlayers = s_players.length > 0;
+        upkeepNeeded = timeHasPassed && isOpen && hasETH && hasPlayers;
+    }
+
     // 1. Get random number
     // 2. Use random number to pick a player
     // 3. Has to be called automatically
-    function pickWinner() external {
+    function performUpkeep(bytes calldata /* performData */) external {
         // Check if enough time has passed
-        if ((block.timestamp - s_lastTimeStamp) < i_interval) {
+        (bool upkeepNeeded, ) = checkUpkeep("");
+        if (!upkeepNeeded) {
             revert();
         }
+
         s_raffleState = RaffleState.CALCULATING;
 
-        // Get our random number from Chainlink // vrf v2.5
-        // 1. Request RNG
-        // 2. Get RNG ---two transactions
         VRFV2PlusClient.RandomWordsRequest memory request = VRFV2PlusClient
             .RandomWordsRequest({
                 keyHash: i_keyHash,
