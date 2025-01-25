@@ -55,6 +55,10 @@ contract HelperConfig is Script, CodeConstants {
         });
     }
 
+    function getConfig() public returns (NetworkConfig memory) {
+        return getConfigByChainId(block.chainid);
+    }
+
     function getOrCreateAnvilConfig() public returns (NetworkConfig memory) {
         // Check to see if we set an active network config
         if (localNetworkConfig.vrfCoordinator != address(0)) {
