@@ -23,5 +23,7 @@ contract CreateSubscription is Script {
         return (subId, vrfCoordinator);
     }
 
-    function run() public {}
+    function run() public {
+        createSubscriptionUsingConfig();
+    }
 }
