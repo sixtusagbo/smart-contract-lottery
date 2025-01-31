@@ -7,8 +7,13 @@ A decentralized and verifiably random smart contract lottery system built with S
 This project implements a lottery system on the blockchain where:
 
 - Players can enter by paying for a ticket
-- After X time, the lottery will automatically draw a winner
+- Each ticket costs a fixed amount of Ether which contributes to the prize pool
+  and must be greater than the minimum ticket price which is the entrance fee (currently 0.01 ether)
+  > See [HelperConfig.s.sol](./script/HelperConfig.s.sol) for the entrance fee
+- After the interval (currently 30s) passes, the lottery will automatically draw a winner
+  > See [HelperConfig.s.sol](./script/HelperConfig.s.sol) for the interval (in seconds)
 - Winner selection is provably random and automated with [Chainlink VRF](https://vrf.chain.link)
+- The winner will receive the entire prize pool
 
 ## Getting Started
 
